@@ -1,0 +1,59 @@
+<!-- authModal.html -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="authModalLabel">Авторизация</h5>
+      </div>
+      <div class="modal-body">
+        <!-- Навигация между вкладками -->
+        <ul class="nav nav-tabs" id="authTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#loginFormTab" type="button" role="tab" aria-controls="loginFormTab" aria-selected="true">Войти</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerFormTab" type="button" role="tab" aria-controls="registerFormTab" aria-selected="false">Регистрация</button>
+          </li>
+        </ul>
+        <div class="tab-content mt-3" id="authTabContent">
+          <!-- Форма авторизации -->
+          <div class="tab-pane fade show active" id="loginFormTab" role="tabpanel" aria-labelledby="login-tab">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="loginUsername" class="form-label">Логин</label>
+                <input type="text" class="form-control" id="loginUsername" name="username" required>
+              </div>
+              <div class="mb-3">
+                <label for="loginPassword" class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="loginPassword" name="password" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Войти</button>
+            </form>
+          </div>
+          <!-- Форма регистрации -->
+          <div class="tab-pane fade" id="registerFormTab" role="tabpanel" aria-labelledby="register-tab">
+            <form id="registerForm">
+              <div class="mb-3">
+                <label for="registerName" class="form-label">Имя</label>
+                <input type="text" class="form-control" id="registerName" name="name" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="registerEmail" name="email" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerPassword" class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="registerPassword" name="password" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerConfirmPassword" class="form-label">Подтвердите пароль</label>
+                <input type="password" class="form-control" id="registerConfirmPassword" name="confirmPassword" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

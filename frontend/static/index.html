@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>EaistSync Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Панель управления EaistSync. Просмотр контрактов, состояний и событий.">
+    <!-- Bootstrap CSS через CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+<header>
+    <!-- Меню загружается из компонента -->
+    <div id="menu-container"></div>
+</header>
+<main class="container mt-4" id="main-content">
+    <!-- Здесь будет динамический контент страниц -->
+    <section id="home-section" class="text-center">
+        <h2>Добро пожаловать</h2>
+        <p>Выберите раздел в меню для просмотра контрактов, состояний или событий.</p>
+    </section>
+</main>
+<!-- Контейнер для модального окна авторизации -->
+<div id="authModalContainer"></div>
+
+<!-- Bootstrap JS Bundle с Popper через CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Скрипты ядра приложения -->
+<script type="module" src="/static/js/core/app.js"></script>
+</body>
+</html>
