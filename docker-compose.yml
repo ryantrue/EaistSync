@@ -1,5 +1,3 @@
-version: "3.9"
-
 # Определяем расширение для общих настроек логирования
 x-logging: &default-logging
   driver: "json-file"

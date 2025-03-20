@@ -1,3 +1,5 @@
+// src/utils/utils.js
+
 /**
  * Получить значение параметра из URL.
  * @param {string} param - Название параметра.

@@ -1,3 +1,5 @@
+// src/services/api.js
+
 /**
  * Универсальная функция для получения JSON по указанному URL.
  * @param {string} url - URL для запроса.
