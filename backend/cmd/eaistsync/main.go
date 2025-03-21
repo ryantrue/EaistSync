@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"eaistsync/backend/pkg/api/rest"
@@ -66,7 +65,6 @@ func run(ctx context.Context) error {
 	if err := migrator.RunUp(); err != nil {
 		log.Fatal("Ошибка запуска миграций", zap.Error(err))
 	}
-	// Сообщение об успешном применении миграций уже залогировано внутри migrator.
 
 	// Создаем HTTP-клиент для REST API.
 	httpClient, err := rest.NewHTTPClient(30 * time.Second)
@@ -97,13 +95,15 @@ func run(ctx context.Context) error {
 	if err != nil {
 		log.Error("Ошибка при первоначальном обновлении данных", zap.Error(err))
 		if telegramBot != nil {
-			// Используем метод Notify из пакета telegrambot
+			// Отправляем уведомление коротким текстовым сообщением.
 			telegramBot.Notify(ctx, fmt.Sprintf("Первичное обновление данных завершено с ошибкой.\nВремя выполнения: %v\nОшибка: %v", time.Since(start), err))
 		}
 	} else {
 		if len(newContracts) > 0 && telegramBot != nil {
-			msg := formatNewContractsMessage(newContracts)
-			telegramBot.Notify(ctx, msg)
+			// Отправляем полный YAML-документ с новыми контрактами.
+			if err := telegramBot.SendJSONDocument(ctx, newContracts); err != nil {
+				log.Error("Ошибка отправки новых контрактов через Telegram", zap.Error(err))
+			}
 		}
 		log.Info("Первичное обновление данных прошло успешно")
 	}
@@ -117,8 +117,9 @@ func run(ctx context.Context) error {
 			log.Error("Ошибка обновления данных", zap.Error(err))
 		} else if telegramBot != nil {
 			if len(newContracts) > 0 {
-				msg := formatNewContractsMessage(newContracts)
-				telegramBot.Notify(ctx, msg)
+				if err := telegramBot.SendJSONDocument(ctx, newContracts); err != nil {
+					log.Error("Ошибка отправки новых контрактов через Telegram", zap.Error(err))
+				}
 			} else {
 				log.Info("Обновление данных выполнено, новых контрактов не обнаружено")
 			}
@@ -145,8 +146,8 @@ func run(ctx context.Context) error {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	select {
-	case sig := <-sigCh:
-		log.Info("Получен сигнал завершения работы", zap.String("signal", sig.String()))
+	case <-sigCh:
+		log.Info("Получен сигнал завершения работы")
 	case err := <-serverErrCh:
 		log.Error("Ошибка работы сервера", zap.Error(err))
 	}
@@ -199,7 +200,7 @@ func updateData(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *
 			log.Warn("Невозможно извлечь ID контракта", zap.Error(err), zap.Any("contract", contract))
 			continue
 		}
-		if !processedContractIDs[id] {
+		if _, exists := processedContractIDs[id]; !exists {
 			newContracts = append(newContracts, contract)
 		}
 	}
@@ -231,19 +232,4 @@ func updateData(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *
 	}
 
 	return newContracts, nil
-}
-
-// formatNewContractsMessage формирует сообщение с информацией по новым контрактам для Telegram.
-func formatNewContractsMessage(newContracts []map[string]interface{}) string {
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Обнаружено %d новых контрактов:\n", len(newContracts)))
-	for _, contract := range newContracts {
-		id, err := utils.ExtractID(contract)
-		if err != nil {
-			continue
-		}
-		// Дополнительные поля (например, название или дату) можно добавить при необходимости.
-		sb.WriteString(fmt.Sprintf("• Контракт ID: %d\n", id))
-	}
-	return sb.String()
 }
