@@ -1,0 +1,90 @@
+{
+  "compilerOptions": {
+    /* Projects */
+    // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
+    // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
+    // "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
+    // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
+    // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
+    // "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
+
+    /* Language and Environment */
+    "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "lib": ["dom", "dom.iterable", "esnext"],           /* Specify library files to be included in the compilation. */
+    "jsx": "react-jsx",                                  /* Use the new JSX transform in React 17+. */
+    // "libReplacement": true,                           /* Enable lib replacement. */
+    // "experimentalDecorators": true,                   /* Enable experimental support for legacy decorators. */
+    // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
+    // "jsxFactory": "React.createElement",              /* Specify the JSX factory function used when targeting React JSX emit. */
+    // "jsxFragmentFactory": "React.Fragment",           /* Specify the JSX Fragment reference used for fragments when targeting React JSX emit. */
+    // "jsxImportSource": "react",                       /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx'. */
+    // "reactNamespace": "React",                        /* Specify the object invoked for 'createElement'. */
+    // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+    // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
+    // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+
+    /* Modules */
+    "module": "commonjs",                                /* Specify what module code is generated. */
+    "moduleResolution": "node",                          /* Specify how TypeScript looks up a file from a given module specifier. */
+    "resolveJsonModule": true,                           /* Enable importing .json files. */
+    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. */
+    "allowSyntheticDefaultImports": true,              /* Allow 'import x from y' when a module doesn't have a default export. */
+    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+
+    /* JavaScript Support */
+    "allowJs": true,                                   /* Allow JavaScript files to be part of the project. */
+    "checkJs": false,                                  /* Disable error reporting in type-checked JavaScript files. */
+    "maxNodeModuleJsDepth": 2,                         /* Specify the maximum folder depth used for checking JavaScript files from 'node_modules'. */
+
+    /* Emit */
+    "sourceMap": true,                                 /* Create source map files for emitted JavaScript files. */
+    // "inlineSourceMap": true,                         /* Include source maps in the emitted JavaScript files. */
+    "outDir": "./dist",                                /* Specify an output folder for all emitted files. */
+    "removeComments": true,                            /* Remove comments from output. */
+    "importHelpers": true,                             /* Import helper functions from tslib instead of inlining them per file. */
+    "downlevelIteration": true,                        /* Emit more compliant JavaScript for iteration. */
+    "inlineSources": true,                             /* Include source code in the source maps. */
+    // "emitBOM": true,                                 /* Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. */
+    // "newLine": "lf",                                 /* Specify the newline character for emitted files. */
+    // "stripInternal": true,                           /* Disable emitting declarations that have '@internal' in their JSDoc comments. */
+    // "noEmitHelpers": true,                           /* Disable generating helper functions like '__extends' in compiled output. */
+    // "noEmitOnError": false,                          /* Do not emit files if any type checking errors are reported. */
+    // "preserveConstEnums": true,                      /* Disable erasing 'const enum' declarations in generated code. */
+    // "declaration": false,                            /* Do not generate .d.ts files. */
+    // "declarationMap": false,                         /* Do not create sourcemaps for .d.ts files. */
+    // "emitDeclarationOnly": false,                    /* Only output .d.ts files and not JavaScript files. */
+
+    /* Interop Constraints */
+    // "isolatedModules": true,                         /* Ensure that each file can be safely transpiled without relying on other imports. */
+    // "verbatimModuleSyntax": true,                    /* Do not transform or elide any imports or exports not marked as type-only. */
+    // "isolatedDeclarations": true,                    /* Require sufficient annotation on exports so other tools can trivially generate declaration files. */
+    // "erasableSyntaxOnly": true,                      /* Do not allow runtime constructs that are not part of ECMAScript. */
+    // "preserveSymlinks": true,                        /* Disable resolving symlinks to their real path. */
+
+    /* Type Checking */
+    "strict": true,                                    /* Enable all strict type-checking options. */
+    // "noImplicitAny": true,                           /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    // "strictNullChecks": true,                        /* Enable strict checking for null and undefined. */
+    // "strictFunctionTypes": true,                     /* Ensure parameters and return types are subtype-compatible in functions. */
+    // "strictBindCallApply": true,                     /* Ensure 'bind', 'call' and 'apply' methods have proper types. */
+    // "strictPropertyInitialization": true,            /* Ensure class properties are initialized in the constructor. */
+    // "strictBuiltinIteratorReturn": true,             /* Enforce correct iterator return types. */
+    // "noImplicitThis": true,                          /* Report errors when 'this' is of type 'any'. */
+    // "useUnknownInCatchVariables": true,              /* Default catch clause variables to 'unknown' instead of 'any'. */
+    // "alwaysStrict": true,                            /* Ensure 'use strict' is always emitted. */
+    // "noUnusedLocals": true,                          /* Report errors for unused locals. */
+    // "noUnusedParameters": true,                      /* Report errors for unused function parameters. */
+    // "exactOptionalPropertyTypes": true,              /* Interpret optional properties exactly as written. */
+    // "noImplicitReturns": true,                       /* Ensure all code paths in a function return a value. */
+    // "noFallthroughCasesInSwitch": true,              /* Report errors for fallthrough cases in switch statements. */
+    // "noUncheckedIndexedAccess": true,                /* Add 'undefined' to a type when accessed using an index. */
+
+    /* Completeness */
+    "skipLibCheck": true                               /* Skip type checking of declaration files (.d.ts). */
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}
