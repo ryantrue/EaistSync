@@ -1,19 +1,30 @@
+// src/components/Filters.tsx
 import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 
-function Filters({
-                     filters,
-                     suggestions,
-                     onFieldChange,      // Универсальный обработчик изменения значения поля
-                     onClearSuggestions, // Функция для очистки подсказок для поля
-                     selectSuggestion,   // Функция выбора подсказки
-                     stateOptions,       // Массив вариантов для поля «Статус»
-                     onApplyFilters,     // Функция применения фильтров
-                 }) {
+interface FiltersProps {
+    filters: { [key: string]: string };
+    suggestions: { [key: string]: string[] };
+    onFieldChange: (fieldKey: string, value: string) => void;
+    onClearSuggestions: (fieldKey: string) => void;
+    selectSuggestion: (fieldKey: string, suggestion: string) => void;
+    stateOptions: string[];
+    onApplyFilters: () => void;
+}
+
+const Filters: React.FC<FiltersProps> = ({
+                                             filters,
+                                             suggestions,
+                                             onFieldChange,
+                                             onClearSuggestions,
+                                             selectSuggestion,
+                                             stateOptions,
+                                             onApplyFilters,
+                                         }) => {
     // Универсальный обработчик для текстовых полей
-    const getInputHandlers = (fieldKey) => ({
+    const getInputHandlers = (fieldKey: string) => ({
         value: filters[fieldKey] || "",
-        onChange: (e) => onFieldChange(fieldKey, e.target.value),
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => onFieldChange(fieldKey, e.target.value),
         onBlur: () => setTimeout(() => onClearSuggestions(fieldKey), 150),
     });
 
@@ -31,11 +42,7 @@ function Filters({
                     <Col md={3} className="position-relative" key={key}>
                         <Form.Group controlId={`filter-${key}`}>
                             <Form.Label>{label}</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder={placeholder}
-                                {...getInputHandlers(key)}
-                            />
+                            <Form.Control type="text" placeholder={placeholder} {...getInputHandlers(key)} />
                         </Form.Group>
                         {suggestions[key] && suggestions[key].length > 0 && (
                             <div
@@ -66,13 +73,14 @@ function Filters({
                     </Col>
                 ))}
 
-                {/* Фильтр по статусу */}
                 <Col md={2}>
                     <Form.Group controlId="filter-state">
                         <Form.Label>Статус:</Form.Label>
                         <Form.Select
                             value={filters.state_Name || ""}
-                            onChange={(e) => onFieldChange("state_Name", e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                onFieldChange("state_Name", e.target.value)
+                            }
                         >
                             <option value="">-- Выберите статус --</option>
                             {stateOptions.map((status, index) => (
@@ -92,6 +100,6 @@ function Filters({
             </Row>
         </Form>
     );
-}
+};
 
 export default Filters;

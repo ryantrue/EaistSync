@@ -6,7 +6,7 @@ import States from "./pages/States";
 import ContractDetail from "./pages/ContractDetail";
 import { Container, Nav, Navbar } from "react-bootstrap";
 
-function App() {
+const App: React.FC = () => {
     return (
         <Router>
             <Navbar bg="dark" variant="dark" expand="lg">
@@ -40,6 +40,6 @@ function App() {
             </main>
         </Router>
     );
-}
+};
 
 export default App;

@@ -1,25 +1,32 @@
+// src/pages/ContractDetail.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Table, Spinner, Alert } from "react-bootstrap";
-import { fetchContracts } from "../services/api.js";
-import { flattenContract, logError } from "../utils/utils.js";
+import { fetchContracts } from "../services/api";
+import { flattenContract, logError } from "../utils/utils";
 import fieldLabels from "../config/fieldLabels";
 
-function ContractDetail() {
-    const { id } = useParams();
-    const [contract, setContract] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+interface Contract {
+    id: number;
+    [key: string]: any;
+}
+
+const ContractDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const [contract, setContract] = useState<Contract | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadContract() {
             try {
                 const data = await fetchContracts();
-                const contracts = data.map(flattenContract);
-                const found = contracts.find((c) => String(c.id) === String(id));
+                const contracts: Contract[] = data.map(flattenContract);
+                const found = contracts.find((c: Contract) => String(c.id) === String(id));
                 setContract(found || null);
             } catch (err) {
-                logError("Ошибка получения деталей договора:", err);
+                // Приводим err к типу Error
+                logError("Ошибка получения деталей договора:", err as Error);
                 setError("Ошибка загрузки данных");
             } finally {
                 setLoading(false);
@@ -82,6 +89,6 @@ function ContractDetail() {
             </Table>
         </Container>
     );
-}
+};
 
 export default ContractDetail;

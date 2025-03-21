@@ -1,6 +1,10 @@
-// src/config/fieldLabels.js
+// src/config/fieldLabels.ts
 
-const fieldLabels = {
+/**
+ * @type {{ [key: string]: string }}
+ */
+
+const fieldLabels: { [key: string]: string } = {
     bankAccountNumber: "Номер банковского счета",
     conclusionDate: "Дата заключения",
     conclusionReason: "Причина заключения",

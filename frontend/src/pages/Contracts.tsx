@@ -1,30 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Table, Alert } from "react-bootstrap";
-import { fetchContracts } from "../services/api.js";
-import { logError, flattenContract } from "../utils/utils.js";
+import { fetchContracts } from "../services/api";
+import { logError, flattenContract } from "../utils/utils";
 import Filters from "../components/Filters";
-import allFieldLabels from "../config/fieldLabels";
+import fieldLabels from "../config/fieldLabels";
 
-// Для таблицы «Контракты» используем только выбранные поля:
-const allowedColumns = {
-    contractNumber: allFieldLabels.contractNumber,
-    conclusionDate: allFieldLabels.conclusionDate,
-    name: allFieldLabels.name,
-    supplier_Name: allFieldLabels.supplier_Name,
-    state_Name: allFieldLabels.state_Name,
+// Пример определения интерфейса контракта (расширьте по необходимости)
+export interface Contract {
+    id: number;
+    contractNumber?: string;
+    conclusionDate?: string;
+    name?: string;
+    supplier_Name?: string;
+    state_Name?: string;
+    [key: string]: any; // Для остальных полей
+}
+
+const allowedColumns: { [key: string]: string } = {
+    contractNumber: fieldLabels.contractNumber,
+    conclusionDate: fieldLabels.conclusionDate,
+    name: fieldLabels.name,
+    supplier_Name: fieldLabels.supplier_Name,
+    state_Name: fieldLabels.state_Name,
 };
 
-function Contracts() {
-    const [contracts, setContracts] = useState([]);
-    const [filteredContracts, setFilteredContracts] = useState([]);
+const Contracts: React.FC = () => {
+    const [contracts, setContracts] = useState<Contract[]>([]);
+    const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
     const [filters, setFilters] = useState({
         contractNumber: "",
         name: "",
         supplier_Name: "",
         state_Name: "",
     });
-    const [suggestions, setSuggestions] = useState({
+    const [suggestions, setSuggestions] = useState<{ [key: string]: string[] }>({
         contractNumber: [],
         name: [],
         supplier_Name: [],
@@ -35,25 +45,24 @@ function Contracts() {
         async function updateContracts() {
             try {
                 const data = await fetchContracts();
-                const flattened = data.map(flattenContract);
+                const flattened = data.map(flattenContract) as Contract[];
                 setContracts(flattened);
                 setFilteredContracts(flattened);
             } catch (error) {
-                logError("Ошибка обновления контрактов", error);
+                logError("Ошибка обновления контрактов", error as Error);
             }
         }
         updateContracts();
     }, []);
 
-    // Универсальная фильтрация: для state_Name используется точное совпадение, для остальных – поиск по подстроке.
     const filterContracts = useCallback(() => {
         return contracts.filter((contract) =>
             Object.entries(filters).every(([key, filterValue]) => {
                 if (!filterValue) return true;
                 if (key === "state_Name") {
-                    return contract[key] && contract[key].toLowerCase() === filterValue.toLowerCase();
+                    return (contract[key] || "").toLowerCase() === filterValue.toLowerCase();
                 }
-                return contract[key] && contract[key].toLowerCase().includes(filterValue.toLowerCase());
+                return (contract[key] || "").toLowerCase().includes(filterValue.toLowerCase());
             })
         );
     }, [contracts, filters]);
@@ -63,9 +72,8 @@ function Contracts() {
         setFilteredContracts(filtered);
     };
 
-    // Универсальная функция формирования подсказок для текстового поля.
     const getSuggestionsForField = useCallback(
-        (fieldKey, value) => {
+        (fieldKey: string, value: string): string[] => {
             const filteredSuggestions = contracts.filter((contract) =>
                 Object.entries(filters)
                     .filter(([key]) => key !== fieldKey)
@@ -81,7 +89,7 @@ function Contracts() {
         [contracts, filters]
     );
 
-    const handleFieldChange = (fieldKey, value) => {
+    const handleFieldChange = (fieldKey: string, value: string) => {
         setFilters((prev) => ({ ...prev, [fieldKey]: value }));
         if (["contractNumber", "name", "supplier_Name"].includes(fieldKey)) {
             setSuggestions((prev) => ({
@@ -91,21 +99,21 @@ function Contracts() {
         }
     };
 
-    const clearSuggestions = (fieldKey) => {
+    const clearSuggestions = (fieldKey: string) => {
         setSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
     };
 
-    const selectSuggestion = (fieldKey, suggestion) => {
+    const selectSuggestion = (fieldKey: string, suggestion: string) => {
         setFilters((prev) => ({ ...prev, [fieldKey]: suggestion }));
         setSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
     };
 
-    const handleRowClick = (id) => {
+    const handleRowClick = (id: number) => {
         navigate(`/contract/${id}`);
     };
 
     const stateOptions = Array.from(
-        new Set(contracts.map((contract) => contract.state_Name).filter(Boolean))
+        new Set(contracts.map((contract) => contract.state_Name).filter((x): x is string => Boolean(x)))
     ).sort((a, b) => a.localeCompare(b));
 
     return (
@@ -158,6 +166,6 @@ function Contracts() {
             )}
         </Container>
     );
-}
+};
 
 export default Contracts;

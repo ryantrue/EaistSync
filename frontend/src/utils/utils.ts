@@ -1,11 +1,11 @@
-// src/utils/utils.js
+// src/utils/utils.ts
 
 /**
  * Получить значение параметра из URL.
- * @param {string} param - Название параметра.
- * @returns {string|null} Значение параметра или null, если параметр не найден.
+ * @param param - Название параметра.
+ * @returns Значение параметра или null, если параметр не найден.
  */
-export function getQueryParam(param) {
+export function getQueryParam(param: string): string | null {
     const params = new URLSearchParams(window.location.search);
     return params.get(param);
 }
@@ -13,11 +13,13 @@ export function getQueryParam(param) {
 /**
  * Преобразует данные договора в плоскую структуру.
  * Если поле data представлено в виде строки, происходит попытка его парсинга.
- * @param {Object} item - Объект договора.
- * @returns {Object} Объединённый объект с данными и идентификатором.
+ * @param item - Объект договора.
+ * @returns Объединённый объект с данными и идентификатором.
  */
-export function flattenContract(item) {
-    let dataObj = {};
+export function flattenContract(
+    item: { data?: string | object; id: number; [key: string]: any }
+): { id: number; [key: string]: any } {
+    let dataObj: object = {};
     if (item.data) {
         if (typeof item.data === "string") {
             try {
@@ -34,9 +36,9 @@ export function flattenContract(item) {
 
 /**
  * Централизованное логирование ошибок.
- * @param {string} message - Сообщение об ошибке.
- * @param {Error} error - Объект ошибки.
+ * @param message - Сообщение об ошибке.
+ * @param error - Объект ошибки.
  */
-export function logError(message, error) {
+export function logError(message: string, error: Error): void {
     console.error(message, error);
 }

@@ -1,11 +1,11 @@
-// src/services/api.js
+// src/services/api.ts
 
 /**
  * Универсальная функция для получения JSON по указанному URL.
  * @param {string} url - URL для запроса.
  * @returns {Promise<any>} - Обещание, которое возвращает распарсенный JSON.
  */
-export async function fetchJSON(url) {
+export async function fetchJSON(url: string): Promise<any> {
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -22,7 +22,7 @@ export async function fetchJSON(url) {
  * Получить список контрактов.
  * @returns {Promise<any>} - Обещание, возвращающее данные контрактов.
  */
-export async function fetchContracts() {
+export async function fetchContracts(): Promise<any> {
     return await fetchJSON("/api/contracts");
 }
 
@@ -30,7 +30,7 @@ export async function fetchContracts() {
  * Получить список состояний.
  * @returns {Promise<any>} - Обещание, возвращающее данные состояний.
  */
-export async function fetchStates() {
+export async function fetchStates(): Promise<any> {
     return await fetchJSON("/api/states");
 }
 
@@ -38,6 +38,6 @@ export async function fetchStates() {
  * Получить список лотов.
  * @returns {Promise<any>} - Обещание, возвращающее данные лотов.
  */
-export async function fetchLots() {
+export async function fetchLots(): Promise<any> {
     return await fetchJSON("/api/lots");
 }
