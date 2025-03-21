@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+// src/pages/Contracts.tsx
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Table, Alert } from "react-bootstrap";
 import { fetchContracts } from "../services/api";
@@ -6,7 +7,7 @@ import { logError, flattenContract } from "../utils/utils";
 import Filters from "../components/Filters";
 import fieldLabels from "../config/fieldLabels";
 
-// Пример определения интерфейса контракта (расширьте по необходимости)
+// Интерфейс для контракта (расширяйте по необходимости)
 export interface Contract {
     id: number;
     contractNumber?: string;
@@ -14,9 +15,18 @@ export interface Contract {
     name?: string;
     supplier_Name?: string;
     state_Name?: string;
-    [key: string]: any; // Для остальных полей
+    [key: string]: any;
 }
 
+// Интерфейс для фильтров
+export interface ContractFilters {
+    contractNumber: string;
+    name: string;
+    supplier_Name: string;
+    state_Name: string;
+}
+
+// Отображаемые колонки таблицы с подписями из конфигурации
 const allowedColumns: { [key: string]: string } = {
     contractNumber: fieldLabels.contractNumber,
     conclusionDate: fieldLabels.conclusionDate,
@@ -28,21 +38,25 @@ const allowedColumns: { [key: string]: string } = {
 const Contracts: React.FC = () => {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<ContractFilters>({
         contractNumber: "",
         name: "",
         supplier_Name: "",
         state_Name: "",
     });
-    const [suggestions, setSuggestions] = useState<{ [key: string]: string[] }>({
+    // Подсказки только для текстовых полей (исключая state_Name)
+    const [suggestions, setSuggestions] = useState<{
+        [key in keyof Omit<ContractFilters, "state_Name">]: string[];
+    }>({
         contractNumber: [],
         name: [],
         supplier_Name: [],
     });
     const navigate = useNavigate();
 
+    // Загрузка данных контрактов при монтировании компонента
     useEffect(() => {
-        async function updateContracts() {
+        const updateContracts = async () => {
             try {
                 const data = await fetchContracts();
                 const flattened = data.map(flattenContract) as Contract[];
@@ -51,10 +65,11 @@ const Contracts: React.FC = () => {
             } catch (error) {
                 logError("Ошибка обновления контрактов", error as Error);
             }
-        }
+        };
         updateContracts();
     }, []);
 
+    // Функция фильтрации контрактов по заданным фильтрам
     const filterContracts = useCallback(() => {
         return contracts.filter((contract) =>
             Object.entries(filters).every(([key, filterValue]) => {
@@ -67,31 +82,44 @@ const Contracts: React.FC = () => {
         );
     }, [contracts, filters]);
 
+    // Применение фильтров для обновления отображаемых контрактов
     const applyFilters = () => {
         const filtered = filterContracts();
         setFilteredContracts(filtered);
     };
 
+    // Генерация подсказок для конкретного текстового поля с проверкой типа
     const getSuggestionsForField = useCallback(
-        (fieldKey: string, value: string): string[] => {
-            const filteredSuggestions = contracts.filter((contract) =>
-                Object.entries(filters)
+        (fieldKey: keyof Omit<ContractFilters, "state_Name">, value: string): string[] => {
+            const filteredSuggestions = contracts.filter((contract) => {
+                const otherFiltersValid = Object.entries(filters)
                     .filter(([key]) => key !== fieldKey)
                     .every(([key, filterValue]) => {
                         if (!filterValue) return true;
-                        return contract[key] && contract[key].toLowerCase().includes(filterValue.toLowerCase());
-                    }) && contract[fieldKey] && contract[fieldKey].toLowerCase().includes(value.toLowerCase())
-            );
-            return Array.from(new Set(filteredSuggestions.map((c) => c[fieldKey]))).sort((a, b) =>
+                        if (key === "state_Name") {
+                            return (contract[key] || "").toLowerCase() === filterValue.toLowerCase();
+                        }
+                        return (contract[key] || "").toLowerCase().includes(filterValue.toLowerCase());
+                    });
+
+                const fieldValue = contract[fieldKey];
+                return (
+                    otherFiltersValid &&
+                    typeof fieldValue === "string" &&
+                    fieldValue.toLowerCase().includes(value.toLowerCase())
+                );
+            });
+            return Array.from(new Set(filteredSuggestions.map((c) => c[fieldKey] as string))).sort((a, b) =>
                 a.localeCompare(b)
             );
         },
         [contracts, filters]
     );
 
-    const handleFieldChange = (fieldKey: string, value: string) => {
+    // Обработчик изменения значения поля фильтра
+    const handleFieldChange = (fieldKey: keyof ContractFilters, value: string) => {
         setFilters((prev) => ({ ...prev, [fieldKey]: value }));
-        if (["contractNumber", "name", "supplier_Name"].includes(fieldKey)) {
+        if (fieldKey !== "state_Name") {
             setSuggestions((prev) => ({
                 ...prev,
                 [fieldKey]: getSuggestionsForField(fieldKey, value),
@@ -99,22 +127,28 @@ const Contracts: React.FC = () => {
         }
     };
 
-    const clearSuggestions = (fieldKey: string) => {
+    // Очистка подсказок для конкретного поля
+    const clearSuggestions = (fieldKey: keyof Omit<ContractFilters, "state_Name">) => {
         setSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
     };
 
-    const selectSuggestion = (fieldKey: string, suggestion: string) => {
+    // Выбор подсказки для текстового поля
+    const selectSuggestion = (fieldKey: keyof Omit<ContractFilters, "state_Name">, suggestion: string) => {
         setFilters((prev) => ({ ...prev, [fieldKey]: suggestion }));
         setSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
     };
 
+    // Переход к деталям контракта по клику на строку таблицы
     const handleRowClick = (id: number) => {
         navigate(`/contract/${id}`);
     };
 
-    const stateOptions = Array.from(
-        new Set(contracts.map((contract) => contract.state_Name).filter((x): x is string => Boolean(x)))
-    ).sort((a, b) => a.localeCompare(b));
+    // Вычисление уникальных статусов для фильтрации
+    const stateOptions = useMemo(() => {
+        return Array.from(
+            new Set(contracts.map((contract) => contract.state_Name).filter((x): x is string => Boolean(x)))
+        ).sort((a, b) => a.localeCompare(b));
+    }, [contracts]);
 
     return (
         <Container className="my-4">
@@ -138,24 +172,20 @@ const Contracts: React.FC = () => {
                 <Table striped hover>
                     <thead>
                     <tr>
-                        {Object.keys(allowedColumns).map((key) => (
-                            <th key={key}>{allowedColumns[key]}</th>
+                        {Object.keys(allowedColumns).map((colKey) => (
+                            <th key={colKey}>{allowedColumns[colKey]}</th>
                         ))}
                     </tr>
                     </thead>
                     <tbody>
                     {filteredContracts.map((contract) => (
-                        <tr
-                            key={contract.id}
-                            onClick={() => handleRowClick(contract.id)}
-                            style={{ cursor: "pointer" }}
-                        >
-                            {Object.keys(allowedColumns).map((key) => (
-                                <td key={key}>
-                                    {contract[key] !== undefined
-                                        ? typeof contract[key] === "object" && contract[key] !== null
-                                            ? JSON.stringify(contract[key])
-                                            : contract[key]
+                        <tr key={contract.id} style={{ cursor: "pointer" }} onClick={() => handleRowClick(contract.id)}>
+                            {Object.keys(allowedColumns).map((colKey) => (
+                                <td key={colKey}>
+                                    {contract[colKey] !== undefined
+                                        ? typeof contract[colKey] === "object" && contract[colKey] !== null
+                                            ? JSON.stringify(contract[colKey])
+                                            : contract[colKey]
                                         : ""}
                                 </td>
                             ))}

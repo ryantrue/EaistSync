@@ -1,16 +1,28 @@
 // src/components/Filters.tsx
 import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
+import SearchField from "./SearchField";
+import { ContractFilters } from "../pages/Contracts";
 
-interface FiltersProps {
-    filters: { [key: string]: string };
-    suggestions: { [key: string]: string[] };
-    onFieldChange: (fieldKey: string, value: string) => void;
-    onClearSuggestions: (fieldKey: string) => void;
-    selectSuggestion: (fieldKey: string, suggestion: string) => void;
+export interface FiltersProps {
+    filters: ContractFilters;
+    suggestions: { [key in keyof Omit<ContractFilters, "state_Name">]: string[] };
+    onFieldChange: (fieldKey: keyof ContractFilters, value: string) => void;
+    onClearSuggestions: (fieldKey: keyof Omit<ContractFilters, "state_Name">) => void;
+    selectSuggestion: (fieldKey: keyof Omit<ContractFilters, "state_Name">, suggestion: string) => void;
     stateOptions: string[];
     onApplyFilters: () => void;
 }
+
+const filterFieldsConfig: Array<{
+    key: keyof Omit<ContractFilters, "state_Name">;
+    label: string;
+    placeholder: string;
+}> = [
+    { key: "contractNumber", label: "Номер договора", placeholder: "Введите номер" },
+    { key: "name", label: "Наименование", placeholder: "Введите наименование" },
+    { key: "supplier_Name", label: "Контрагент", placeholder: "Введите контрагента" },
+];
 
 const Filters: React.FC<FiltersProps> = ({
                                              filters,
@@ -21,63 +33,28 @@ const Filters: React.FC<FiltersProps> = ({
                                              stateOptions,
                                              onApplyFilters,
                                          }) => {
-    // Универсальный обработчик для текстовых полей
-    const getInputHandlers = (fieldKey: string) => ({
-        value: filters[fieldKey] || "",
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => onFieldChange(fieldKey, e.target.value),
-        onBlur: () => setTimeout(() => onClearSuggestions(fieldKey), 150),
-    });
-
-    // Конфигурация текстовых полей
-    const filterFields = [
-        { key: "contractNumber", label: "Номер договора", placeholder: "Введите номер" },
-        { key: "name", label: "Наименование", placeholder: "Введите наименование" },
-        { key: "supplier_Name", label: "Контрагент", placeholder: "Введите контрагента" },
-    ];
-
     return (
         <Form>
             <Row className="g-3">
-                {filterFields.map(({ key, label, placeholder }) => (
-                    <Col md={3} className="position-relative" key={key}>
-                        <Form.Group controlId={`filter-${key}`}>
-                            <Form.Label>{label}</Form.Label>
-                            <Form.Control type="text" placeholder={placeholder} {...getInputHandlers(key)} />
-                        </Form.Group>
-                        {suggestions[key] && suggestions[key].length > 0 && (
-                            <div
-                                className="dropdown-menu show"
-                                style={{
-                                    width: "100%",
-                                    maxHeight: "200px",
-                                    overflowY: "auto",
-                                    position: "absolute",
-                                }}
-                            >
-                                {suggestions[key].map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="dropdown-item"
-                                        style={{
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                        }}
-                                        onMouseDown={() => selectSuggestion(key, item)}
-                                    >
-                                        {item}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                {filterFieldsConfig.map((field) => (
+                    <Col md={3} key={field.key}>
+                        <SearchField
+                            fieldKey={field.key}
+                            label={field.label}
+                            placeholder={field.placeholder}
+                            value={filters[field.key]}
+                            suggestions={suggestions[field.key]}
+                            onChange={onFieldChange}
+                            onBlur={onClearSuggestions}
+                            onSelectSuggestion={selectSuggestion}
+                        />
                     </Col>
                 ))}
-
                 <Col md={2}>
                     <Form.Group controlId="filter-state">
                         <Form.Label>Статус:</Form.Label>
                         <Form.Select
-                            value={filters.state_Name || ""}
+                            value={filters.state_Name}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                                 onFieldChange("state_Name", e.target.value)
                             }
@@ -91,7 +68,6 @@ const Filters: React.FC<FiltersProps> = ({
                         </Form.Select>
                     </Form.Group>
                 </Col>
-
                 <Col md={1} className="d-flex align-items-end">
                     <Button variant="primary" onClick={onApplyFilters}>
                         Применить

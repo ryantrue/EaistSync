@@ -33,11 +33,3 @@ export async function fetchContracts(): Promise<any> {
 export async function fetchStates(): Promise<any> {
     return await fetchJSON("/api/states");
 }
-
-/**
- * Получить список лотов.
- * @returns {Promise<any>} - Обещание, возвращающее данные лотов.
- */
-export async function fetchLots(): Promise<any> {
-    return await fetchJSON("/api/lots");
-}
