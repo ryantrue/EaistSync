@@ -1,7 +1,7 @@
 // src/pages/Contracts.tsx
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Card, Table, Alert } from "react-bootstrap";
+import { Container, Card, Table, Alert, Spinner } from "react-bootstrap";
 import { fetchContracts } from "../services/api";
 import { logError, flattenContract } from "../utils/utils";
 import Filters from "../components/Filters";
@@ -35,6 +35,21 @@ const allowedColumns: { [key: string]: string } = {
     state_Name: fieldLabels.state_Name,
 };
 
+// Хук для дебаунсинга значения
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 const Contracts: React.FC = () => {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
@@ -52,9 +67,10 @@ const Contracts: React.FC = () => {
         name: [],
         supplier_Name: [],
     });
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
-    // Загрузка данных контрактов при монтировании компонента
+    // Загружаем данные при монтировании компонента
     useEffect(() => {
         const updateContracts = async () => {
             try {
@@ -64,6 +80,8 @@ const Contracts: React.FC = () => {
                 setFilteredContracts(flattened);
             } catch (error) {
                 logError("Ошибка обновления контрактов", error as Error);
+            } finally {
+                setIsLoading(false);
             }
         };
         updateContracts();
@@ -82,11 +100,13 @@ const Contracts: React.FC = () => {
         );
     }, [contracts, filters]);
 
-    // Применение фильтров для обновления отображаемых контрактов
-    const applyFilters = () => {
-        const filtered = filterContracts();
-        setFilteredContracts(filtered);
-    };
+    // Дебаунсим значения фильтров для оптимизации
+    const debouncedFilters = useDebounce(filters, 300);
+
+    // Применяем фильтрацию при изменении дебаунсённых фильтров
+    useEffect(() => {
+        setFilteredContracts(filterContracts());
+    }, [debouncedFilters, filterContracts]);
 
     // Генерация подсказок для конкретного текстового поля с проверкой типа
     const getSuggestionsForField = useCallback(
@@ -162,11 +182,18 @@ const Contracts: React.FC = () => {
                         onClearSuggestions={clearSuggestions}
                         selectSuggestion={selectSuggestion}
                         stateOptions={stateOptions}
-                        onApplyFilters={applyFilters}
+                        // Можно оставить кнопку "Применить", если требуется ручной запуск фильтрации
+                        onApplyFilters={() => setFilteredContracts(filterContracts())}
                     />
                 </Card.Body>
             </Card>
-            {filteredContracts.length === 0 ? (
+            {isLoading ? (
+                <div className="d-flex justify-content-center">
+                    <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Загрузка...</span>
+                    </Spinner>
+                </div>
+            ) : filteredContracts.length === 0 ? (
                 <Alert variant="info">Нет данных</Alert>
             ) : (
                 <Table striped hover>

@@ -133,7 +133,8 @@ func run(ctx context.Context) error {
 
 	// Запуск HTTP-сервера.
 	serverAddr := fmt.Sprintf(":%s", cfg.Port)
-	appServer := server.NewServer(dbConn, log)
+	// Исправленный вызов: передаем конфигурацию как третий аргумент.
+	appServer := server.NewServer(dbConn, log, cfg)
 	serverErrCh := make(chan error, 1)
 	go func() {
 		log.Info("Запуск сервера", zap.String("addr", serverAddr))
