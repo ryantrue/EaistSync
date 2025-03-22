@@ -1,12 +1,27 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home";
-import Contracts from "./pages/Contracts";
-import States from "./pages/States";
-import ContractDetail from "./pages/ContractDetail";
+// src/App.tsx
+import React, { useContext, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import LazyLoader from "./components/LazyLoader";
 import { Container, Nav, Navbar } from "react-bootstrap";
+import { AuthContext, AuthProvider } from "./context/AuthContext";
+
+const Home = lazy(() => import("./pages/Home"));
+const Contracts = lazy(() => import("./pages/Contracts"));
+const States = lazy(() => import("./pages/States"));
+const ContractDetail = lazy(() => import("./pages/ContractDetail"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Profile = lazy(() => import("./pages/Profile"));
+
+// Компонент для защиты маршрутов
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useContext(AuthContext);
+    return user ? <>{children}</> : <Navigate to="/" replace />;
+};
 
 const App: React.FC = () => {
+    const { user, logout } = useContext(AuthContext);
+
     return (
         <Router>
             <Navbar bg="dark" variant="dark" expand="lg">
@@ -20,26 +35,84 @@ const App: React.FC = () => {
                             <Nav.Link as={Link} to="/">
                                 Главная
                             </Nav.Link>
-                            <Nav.Link as={Link} to="/contracts">
-                                Контракты
-                            </Nav.Link>
-                            <Nav.Link as={Link} to="/states">
-                                Состояния
-                            </Nav.Link>
+                            {user && (
+                                <>
+                                    <Nav.Link as={Link} to="/contracts">
+                                        Контракты
+                                    </Nav.Link>
+                                    <Nav.Link as={Link} to="/states">
+                                        Состояния
+                                    </Nav.Link>
+                                    <Nav.Link as={Link} to="/profile">
+                                        Профиль
+                                    </Nav.Link>
+                                </>
+                            )}
+                        </Nav>
+                        <Nav>
+                            {user ? (
+                                <>
+                                    <Nav.Link disabled>Привет, {user.username}</Nav.Link>
+                                    <Nav.Link onClick={logout}>Logout</Nav.Link>
+                                </>
+                            ) : (
+                                <Nav.Link as={Link} to="/register">
+                                    Register
+                                </Nav.Link>
+                            )}
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
             <main>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/contracts" element={<Contracts />} />
-                    <Route path="/states" element={<States />} />
-                    <Route path="/contract/:id" element={<ContractDetail />} />
-                </Routes>
+                <LazyLoader>
+                    <Routes>
+                        <Route path="/" element={user ? <Home /> : <Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route
+                            path="/contracts"
+                            element={
+                                <ProtectedRoute>
+                                    <Contracts />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/states"
+                            element={
+                                <ProtectedRoute>
+                                    <States />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/contract/:id"
+                            element={
+                                <ProtectedRoute>
+                                    <ContractDetail />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile"
+                            element={
+                                <ProtectedRoute>
+                                    <Profile />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </LazyLoader>
             </main>
         </Router>
     );
 };
 
-export default App;
+const AppWithProvider: React.FC = () => (
+    <AuthProvider>
+        <App />
+    </AuthProvider>
+);
+
+export default AppWithProvider;

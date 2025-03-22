@@ -27,6 +27,9 @@ type Config struct {
 	// Параметры для Telegram-бота
 	TelegramBotToken string
 	TelegramChatID   int64
+
+	// JWT секрет для подписи токенов
+	JWTSecret string
 }
 
 func LoadConfig() (*Config, error) {
@@ -58,6 +61,9 @@ func LoadConfig() (*Config, error) {
 	// Чтение параметров для Telegram-бота
 	telegramBotToken := viper.GetString("TELEGRAM_BOT_TOKEN")
 	telegramChatID := int64(viper.GetInt("TELEGRAM_CHAT_ID"))
+
+	// Чтение JWT секрета
+	jwtSecret := viper.GetString("JWT_SECRET")
 
 	// Проверка и установка значений по умолчанию
 	if username == "" || password == "" {
@@ -96,6 +102,9 @@ func LoadConfig() (*Config, error) {
 	if loginURL == "" {
 		loginURL = "https://eaist.mos.ru/module/protected-admin/api/login"
 	}
+	if jwtSecret == "" {
+		return nil, fmt.Errorf("JWT_SECRET не задан")
+	}
 
 	// Параметры для Telegram-бота можно не задавать, если функциональность не требуется.
 	// Но если задан токен, то идентификатор чата должен быть установлен.
@@ -119,5 +128,6 @@ func LoadConfig() (*Config, error) {
 		LoginURL:         loginURL,
 		TelegramBotToken: telegramBotToken,
 		TelegramChatID:   telegramChatID,
+		JWTSecret:        jwtSecret,
 	}, nil
 }
