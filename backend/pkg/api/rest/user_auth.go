@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"eaistsync/backend/pkg/config"
+	"github.com/ryantrue/EaistSync/pkg/config"
 )
 
 // User представляет модель пользователя в БД.

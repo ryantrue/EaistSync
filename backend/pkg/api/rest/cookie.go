@@ -1,17 +1,17 @@
+// rest/http_client.go
 package rest
 
 import (
-	"eaistsync/backend/pkg/logger"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
 
+	"github.com/ryantrue/EaistSync/pkg/logger"
 	"go.uber.org/zap"
 )
 
 var Logger *zap.Logger
 
-// init инициализирует глобальный логгер, используя функцию NewLogger из пакета logger.
 func init() {
 	var err error
 	Logger, err = logger.NewLogger()
@@ -20,8 +20,7 @@ func init() {
 	}
 }
 
-// NewHTTPClient создаёт HTTP-клиент с CookieJar и заданным таймаутом.
-// При возникновении ошибки при создании CookieJar, ошибка логируется и возвращается.
+// NewHTTPClient создает и возвращает *http.Client с настроенным CookieJar и заданным таймаутом.
 func NewHTTPClient(timeout time.Duration) (*http.Client, error) {
 	jar, err := NewCookieJar()
 	if err != nil {
@@ -34,8 +33,6 @@ func NewHTTPClient(timeout time.Duration) (*http.Client, error) {
 	}, nil
 }
 
-// NewCookieJar создаёт и возвращает новый CookieJar.
-// Ошибки при создании CookieJar логируются и возвращаются вызывающей стороне.
 func NewCookieJar() (http.CookieJar, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {

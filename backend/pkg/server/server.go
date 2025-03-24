@@ -5,10 +5,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
-	"eaistsync/backend/pkg/api/rest"
-	"eaistsync/backend/pkg/config"
-	"eaistsync/backend/pkg/handlers"
-	"eaistsync/backend/pkg/middleware"
+	"github.com/ryantrue/EaistSync/pkg/api/rest"
+	"github.com/ryantrue/EaistSync/pkg/config"
+	"github.com/ryantrue/EaistSync/pkg/handlers"
+	"github.com/ryantrue/EaistSync/pkg/middleware"
 )
 
 // Server хранит ссылки на базу данных, логгер и конфигурацию.

@@ -1,16 +1,27 @@
-# Определяем расширение для общих настроек логирования
+##############################
+# Общие настройки и якоря
+##############################
+
+# Общие настройки логирования для всех сервисов
 x-logging: &default-logging
   driver: "json-file"
   options:
     max-size: "10m"
     max-file: "3"
 
+# Якорь для подключения общего файла переменных окружения (для не чувствительных данных)
+x-env: &default-env "./.env"
+
+##############################
+# Сервисы
+##############################
+
 services:
   # Backend-сервис: основное приложение
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: eaistsync_backend
     ports:
       - "${PORT}:8080"  # Внешний порт из .env, внутренний — 8080
@@ -23,8 +34,20 @@ services:
         condition: service_started
       minio:
         condition: service_started
-    env_file:
-      - .env
+    env_file: *default-env
+    environment:
+      # Секреты будут доступны через файлы
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram_bot_token
+      TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram_chat_id
+      USERNAME_FILE: /run/secrets/username
+      PASSWORD_FILE: /run/secrets/password
+    secrets:
+      - jwt_secret
+      - telegram_bot_token
+      - telegram_chat_id
+      - username
+      - password
     restart: on-failure
     logging: *default-logging
     deploy:
@@ -48,8 +71,7 @@ services:
       - "80:80"
     depends_on:
       - backend
-    env_file:
-      - .env
+    env_file: *default-env
     restart: on-failure
     logging: *default-logging
     deploy:
@@ -69,7 +91,8 @@ services:
     container_name: eaistsync_postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # Вместо явного пароля передаём путь к секрeту:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: eaistsync
     ports:
       - "5432:5432"
@@ -88,6 +111,8 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+    secrets:
+      - postgres_password
     networks:
       - eaistsync_network
 
@@ -126,7 +151,7 @@ services:
     depends_on:
       - zookeeper
     healthcheck:
-      test: ["CMD-SHELL", "echo 'dummy check'"]
+      test: [ "CMD-SHELL", "/opt/bitnami/scripts/kafka/healthcheck.sh" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,11 +172,12 @@ services:
   minio:
     image: minio/minio:latest
     container_name: eaistsync_minio
-    env_file:
-      - .env
+    # Здесь оставляем подключение не чувствительных переменных из .env, если они нужны
+    env_file: *default-env
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # Передаём секреты через путь к файлам
+      MINIO_ROOT_USER_FILE: /run/secrets/minio_root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
     volumes:
       - minio_data:/data
     ports:
@@ -173,8 +199,15 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+    secrets:
+      - minio_root_user
+      - minio_root_password
     networks:
       - eaistsync_network
+
+##############################
+# Хранилища, сети и секреты
+##############################
 
 volumes:
   minio_data:
@@ -183,3 +216,26 @@ networks:
   eaistsync_network:
     name: eaistsync_network
     driver: bridge
+
+secrets:
+  # Секреты для MinIO
+  minio_root_user:
+    file: ./secrets/minio_root_user.txt
+  minio_root_password:
+    file: ./secrets/minio_root_password.txt
+
+  # Секрет для Postgres
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+  # Секреты для Backend-сервиса
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  telegram_bot_token:
+    file: ./secrets/telegram_bot_token.txt
+  telegram_chat_id:
+    file: ./secrets/telegram_chat_id.txt
+  username:
+    file: ./secrets/username.txt
+  password:
+    file: ./secrets/password.txt

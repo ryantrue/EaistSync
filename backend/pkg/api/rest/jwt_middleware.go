@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
-	"eaistsync/backend/pkg/config"
+	"github.com/ryantrue/EaistSync/pkg/config"
 )
 
 // JWTMiddleware проверяет валидность JWT токена из заголовка Authorization.

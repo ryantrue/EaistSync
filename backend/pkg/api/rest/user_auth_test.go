@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"eaistsync/backend/pkg/config"
+	"github.com/ryantrue/EaistSync/pkg/config"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
