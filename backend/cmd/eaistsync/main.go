@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -8,21 +9,19 @@ import (
 	"os/signal"
 	"time"
 
-	"eaistsync/backend/pkg/api/rest"
-	"eaistsync/backend/pkg/config"
-	"eaistsync/backend/pkg/db"
-	"eaistsync/backend/pkg/logger"
-	"eaistsync/backend/pkg/messaging"
-	"eaistsync/backend/pkg/migrate"
-	"eaistsync/backend/pkg/server"
-	"eaistsync/backend/pkg/telegrambot"
-	"eaistsync/backend/pkg/utils"
+	"github.com/ryantrue/EaistSync/pkg/api/rest"
+	"github.com/ryantrue/EaistSync/pkg/config"
+	"github.com/ryantrue/EaistSync/pkg/cron"
+	"github.com/ryantrue/EaistSync/pkg/db"
+	"github.com/ryantrue/EaistSync/pkg/logger"
+	"github.com/ryantrue/EaistSync/pkg/messaging"
+	"github.com/ryantrue/EaistSync/pkg/migrate"
+	"github.com/ryantrue/EaistSync/pkg/server"
+	"github.com/ryantrue/EaistSync/pkg/telegrambot"
+	"github.com/ryantrue/EaistSync/pkg/utils"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
-
-	_ "github.com/lib/pq" // PostgreSQL драйвер
 )
 
 // processedContractIDs хранит идентификаторы уже обработанных контрактов.
@@ -88,19 +87,17 @@ func run(ctx context.Context) error {
 		}
 	}
 
-	// Выполняем первичное обновление данных.
+	// Первичное обновление данных.
 	log.Info("Первичный запуск обновления данных")
 	start := time.Now()
 	newContracts, err := updateData(ctx, httpClient, dbConn, log, producer, cfg)
 	if err != nil {
 		log.Error("Ошибка при первоначальном обновлении данных", zap.Error(err))
 		if telegramBot != nil {
-			// Отправляем уведомление коротким текстовым сообщением.
 			telegramBot.Notify(ctx, fmt.Sprintf("Первичное обновление данных завершено с ошибкой.\nВремя выполнения: %v\nОшибка: %v", time.Since(start), err))
 		}
 	} else {
 		if len(newContracts) > 0 && telegramBot != nil {
-			// Отправляем полный YAML-документ с новыми контрактами.
 			if err := telegramBot.SendJSONDocument(ctx, newContracts); err != nil {
 				log.Error("Ошибка отправки новых контрактов через Telegram", zap.Error(err))
 			}
@@ -108,32 +105,16 @@ func run(ctx context.Context) error {
 		log.Info("Первичное обновление данных прошло успешно")
 	}
 
-	// Планировщик обновления данных каждые 5 минут.
-	cronScheduler := cron.New()
-	_, err = cronScheduler.AddFunc("@every 5m", func() {
-		log.Info("Запуск обновления данных из EAIST")
-		newContracts, err := updateData(ctx, httpClient, dbConn, log, producer, cfg)
-		if err != nil {
-			log.Error("Ошибка обновления данных", zap.Error(err))
-		} else if telegramBot != nil {
-			if len(newContracts) > 0 {
-				if err := telegramBot.SendJSONDocument(ctx, newContracts); err != nil {
-					log.Error("Ошибка отправки новых контрактов через Telegram", zap.Error(err))
-				}
-			} else {
-				log.Info("Обновление данных выполнено, новых контрактов не обнаружено")
-			}
-		}
-	})
+	// Создаем новый Scheduler из пакета cron с передачей корневого контекста.
+	scheduler := cron.NewScheduler(ctx, log)
+	_, err = scheduler.AddTask("@daily", dataUpdater(ctx, httpClient, dbConn, log, producer, cfg, telegramBot))
 	if err != nil {
-		log.Fatal("Ошибка настройки расписания", zap.Error(err))
+		log.Fatal("Ошибка добавления cron-задачи", zap.Error(err))
 	}
-	cronScheduler.Start()
-	defer cronScheduler.Stop()
+	go scheduler.Start()
 
 	// Запуск HTTP-сервера.
 	serverAddr := fmt.Sprintf(":%s", cfg.Port)
-	// Исправленный вызов: передаем конфигурацию как третий аргумент.
 	appServer := server.NewServer(dbConn, log, cfg)
 	serverErrCh := make(chan error, 1)
 	go func() {
@@ -193,7 +174,7 @@ func updateData(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *
 		return nil, fmt.Errorf("ошибка получения состояний: %w", err)
 	}
 
-	// Фильтруем новые контракты (т.е. те, чей ID ранее не встречался).
+	// Фильтруем новые контракты (те, чей ID ранее не встречался).
 	var newContracts []map[string]interface{}
 	for _, contract := range contracts {
 		id, err := utils.ExtractID(contract)
@@ -213,11 +194,14 @@ func updateData(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *
 		}
 	}
 
-	// Сохраняем данные в БД.
-	if err := db.UpsertJSON(ctx, dbConn, "contracts", contracts, log); err != nil {
+	// Создаем JSONUpserter с динамическим списком разрешённых таблиц.
+	upserter := db.NewJSONUpserter(dbConn, log, []string{"contracts", "states"})
+
+	// Сохраняем данные в БД через новый интерфейс.
+	if err := upserter.UpsertMany(ctx, "contracts", contracts); err != nil {
 		return nil, fmt.Errorf("ошибка сохранения контрактов: %w", err)
 	}
-	if err := db.UpsertJSON(ctx, dbConn, "states", states, log); err != nil {
+	if err := upserter.UpsertMany(ctx, "states", states); err != nil {
 		return nil, fmt.Errorf("ошибка сохранения состояний: %w", err)
 	}
 
@@ -233,4 +217,26 @@ func updateData(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *
 	}
 
 	return newContracts, nil
+}
+
+// dataUpdater возвращает функцию UpdaterFunc, которая замыкает все необходимые зависимости.
+func dataUpdater(ctx context.Context, client *http.Client, dbConn *sqlx.DB, log *zap.Logger, producer messaging.KafkaProducerInterface, cfg *config.Config, telegramBot *telegrambot.TelegramBot) cron.UpdaterFunc {
+	return func(ctx context.Context) {
+		log.Info("Запуск обновления данных из EAIST")
+		newContracts, err := updateData(ctx, client, dbConn, log, producer, cfg)
+		if err != nil {
+			log.Error("Ошибка обновления данных", zap.Error(err))
+			if telegramBot != nil {
+				telegramBot.Notify(ctx, fmt.Sprintf("Ошибка обновления данных: %v", err))
+			}
+		} else if telegramBot != nil {
+			if len(newContracts) > 0 {
+				if err := telegramBot.SendJSONDocument(ctx, newContracts); err != nil {
+					log.Error("Ошибка отправки новых контрактов через Telegram", zap.Error(err))
+				}
+			} else {
+				log.Info("Обновление данных выполнено, новых контрактов не обнаружено")
+			}
+		}
+	}
 }

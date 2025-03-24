@@ -3,9 +3,9 @@ package rest
 import (
 	"bytes"
 	"context"
-	"eaistsync/backend/pkg/config"
 	"encoding/json"
 	"fmt"
+	"github.com/ryantrue/EaistSync/pkg/config"
 	"io"
 	"net/http"
 )

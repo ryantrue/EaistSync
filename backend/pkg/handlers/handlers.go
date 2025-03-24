@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
-	"eaistsync/backend/pkg/dbutils" // Импорт пакета с утилитами для работы с БД
+	"github.com/ryantrue/EaistSync/pkg/dbutils" // Импорт пакета с утилитами для работы с БД
 )
 
 // HandleGetRecords возвращает обработчик для GET-запросов, который выбирает данные по указанному запросу.

@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 
-WORKDIR /build/backend/cmd/eaistsync
+WORKDIR /build/cmd/eaistsync
 RUN CGO_ENABLED=1 go build -o eaistsync .
 
 # Stage 2: Финальный образ
@@ -28,10 +28,10 @@ RUN apk --no-cache add ca-certificates wget
 WORKDIR /app
 
 # Копируем собранный бинарник из предыдущего этапа
-COPY --from=builder /build/backend/cmd/eaistsync/eaistsync .
+COPY --from=builder /build/cmd/eaistsync/eaistsync .
 
 # Копируем миграции (если нужны)
-COPY --from=builder /build/backend/migrations ./migrations
+COPY --from=builder /build/migrations ./migrations
 
 EXPOSE 8080
 
